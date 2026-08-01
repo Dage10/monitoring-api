@@ -44,6 +44,11 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
     public Long getId() {
         return id;
     }
@@ -67,19 +72,4 @@ public class User {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-
-
 }

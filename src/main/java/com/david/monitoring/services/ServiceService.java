@@ -19,64 +19,36 @@ public class ServiceService {
     }
 
     public ServiceResponse create(Long userId, CreateServiceRequest request) {
-        ServiceEntity entity = new ServiceEntity(
-                userId,
-                request.name(),
-                request.url()
-        );
-
-        ServiceEntity saved = repository.save(entity);
-
-        return new ServiceResponse(
-                saved.getId(),
-                saved.getName(),
-                saved.getUrl(),
-                saved.getCreatedAt()
-        );
+        ServiceEntity entity = new ServiceEntity(userId, request.name(), request.url());
+        return toResponse(repository.save(entity));
     }
 
     public List<ServiceResponse> list(Long userId) {
-        return repository.findByUserId(userId)
-                .stream()
-                .map(s -> new ServiceResponse(
-                        s.getId(),
-                        s.getName(),
-                        s.getUrl(),
-                        s.getCreatedAt()
-                ))
-                .toList();
+        return repository.findByUserId(userId).stream().map(this::toResponse).toList();
     }
 
     public ServiceResponse get(Long userId, Long id) {
-        ServiceEntity entity = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        if (!entity.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
-        return new ServiceResponse(
-                entity.getId(),
-                entity.getName(),
-                entity.getUrl(),
-                entity.getCreatedAt()
-        );
+        return toResponse(findByIdOrForbidden(userId, id));
     }
 
     public void delete(Long userId, Long id) {
-        ServiceEntity entity = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        if (!entity.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
-        repository.delete(entity);
+        repository.delete(findByIdOrForbidden(userId, id));
     }
 
     public List<ServiceEntity> findAllServices() {
         return repository.findAll();
     }
 
+    private ServiceEntity findByIdOrForbidden(Long userId, Long id) {
+        ServiceEntity entity = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!entity.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return entity;
+    }
 
+    private ServiceResponse toResponse(ServiceEntity entity) {
+        return new ServiceResponse(entity.getId(), entity.getName(), entity.getUrl(), entity.getCreatedAt());
+    }
 }

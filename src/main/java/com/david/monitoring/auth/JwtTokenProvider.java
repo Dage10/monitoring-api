@@ -12,14 +12,13 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    private final SecretKey key;
+    private final long validityInMillis;
 
-    @Value("${jwt.expiration-millis:86400000}")
-    private long validityInMillis;
-
-    private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    public JwtTokenProvider(@Value("${jwt.secret}") String secret,
+                            @Value("${jwt.expiration-millis:86400000}") long validityInMillis) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.validityInMillis = validityInMillis;
     }
 
     public String createToken(Long userId, String username, String email) {
@@ -32,13 +31,13 @@ public class JwtTokenProvider {
                 .claim("email", email)
                 .issuedAt(now)
                 .expiration(expiry)
-                .signWith(getKey())
+                .signWith(key)
                 .compact();
     }
 
     public Long getUserId(String token) {
         var claims = Jwts.parser()
-                .verifyWith(getKey())
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
