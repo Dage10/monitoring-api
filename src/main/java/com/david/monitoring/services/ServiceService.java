@@ -74,4 +74,9 @@ public class ServiceService {
         repository.delete(entity);
     }
 
+    public List<ServiceEntity> findAllServices() {
+        return repository.findAll();
+    }
+
+
 }
