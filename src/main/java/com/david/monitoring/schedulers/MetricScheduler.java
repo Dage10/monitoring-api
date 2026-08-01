@@ -1,7 +1,9 @@
 package com.david.monitoring.schedulers;
 
+import com.david.monitoring.entities.Metric;
 import com.david.monitoring.entities.ServiceEntity;
 import com.david.monitoring.metrics.MetricCollectorService;
+import com.david.monitoring.metrics.MetricsStreamService;
 import com.david.monitoring.services.ServiceService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,11 +15,14 @@ public class MetricScheduler {
 
     private final ServiceService serviceService;
     private final MetricCollectorService metricCollectorService;
+    private final MetricsStreamService metricsStreamService;
 
     public MetricScheduler(ServiceService serviceService,
-                           MetricCollectorService metricCollectorService) {
+                           MetricCollectorService metricCollectorService,
+                           MetricsStreamService metricsStreamService) {
         this.serviceService = serviceService;
         this.metricCollectorService = metricCollectorService;
+        this.metricsStreamService = metricsStreamService;
     }
 
     @Scheduled(fixedRate = 30_000)
@@ -25,8 +30,9 @@ public class MetricScheduler {
 
         List<ServiceEntity> services = serviceService.findAllServices();
 
-        for (ServiceEntity service : services) {
-            metricCollectorService.collect(service);
-        }
+        services.parallelStream().forEach(service -> {
+            Metric metric = metricCollectorService.collect(service);
+            metricsStreamService.sendMetric(service.getUserId(), metric);
+        });
     }
 }
