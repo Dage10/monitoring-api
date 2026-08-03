@@ -28,6 +28,14 @@ public class MetricsStreamService {
     }
 
     public void sendMetric(Long userId, Metric metric) {
+        sendEvent(userId, "metric", metric);
+    }
+
+    public void sendAlert(Long userId, String serviceName) {
+        sendEvent(userId, "alert", "Anomaly detected in service: " + serviceName);
+    }
+
+    private void sendEvent(Long userId, String eventName, Object data) {
         List<SseEmitter> list = emitters.get(userId);
         if (list == null || list.isEmpty()) {
             return;
@@ -37,8 +45,8 @@ public class MetricsStreamService {
             try {
                 emitter.send(
                         SseEmitter.event()
-                                .name("metric")
-                                .data(metric)
+                                .name(eventName)
+                                .data(data)
                 );
             } catch (IOException e) {
                 emitter.complete();
@@ -46,5 +54,6 @@ public class MetricsStreamService {
             }
         }
     }
+
 
 }

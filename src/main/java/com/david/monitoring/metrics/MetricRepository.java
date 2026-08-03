@@ -26,4 +26,12 @@ public interface MetricRepository extends JpaRepository<Metric, Long> {
         AND m.createdAt >= :from
     """)
     Double findAverageLatency(ServiceEntity service, Instant from);
+
+    @Query("""
+        SELECT m.latencyMs
+        FROM Metric m
+        WHERE m.service.id = :serviceId
+        AND m.createdAt >= :since
+    """)
+    List<Long> findLatenciesSince(Long serviceId, Instant since);
 }
